@@ -4,6 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Décompte des retrouvailles</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23101312'/%3E%3Cpath d='M32 51S12 39.2 12 24.8C12 17.6 16.7 13 23.1 13c3.7 0 7.1 1.9 8.9 5 1.8-3.1 5.2-5 8.9-5C47.3 13 52 17.6 52 24.8 52 39.2 32 51 32 51Z' fill='%23f19c76'/%3E%3C/svg%3E"
+    />
     <style>
       :root {
         color-scheme: dark;
@@ -101,7 +105,9 @@
       }
 
       .tile,
-      .timeline {
+      .timeline,
+      .daily,
+      .actions {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
@@ -137,6 +143,34 @@
 
       .timeline {
         padding: 24px;
+      }
+
+      .pulse-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .pulse {
+        min-height: 92px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(246, 240, 226, 0.06);
+      }
+
+      .pulse strong {
+        display: block;
+        font-size: clamp(1.8rem, 5vw, 3.2rem);
+        line-height: 1;
+      }
+
+      .pulse span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
       }
 
       .timeline-head {
@@ -191,6 +225,68 @@
         line-height: 1.5;
       }
 
+      .daily,
+      .actions {
+        padding: 24px;
+      }
+
+      .daily p {
+        margin: 12px 0 0;
+        color: var(--text);
+        font-size: clamp(1.25rem, 3vw, 2rem);
+        line-height: 1.25;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .actions p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .share-button {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 18px;
+        border: 1px solid rgba(244, 239, 230, 0.24);
+        border-radius: 8px;
+        color: #101312;
+        background: linear-gradient(90deg, var(--accent-2), var(--accent));
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .surprise {
+        display: none;
+        padding: 28px;
+        border: 1px solid rgba(241, 156, 118, 0.45);
+        border-radius: 8px;
+        background: rgba(241, 156, 118, 0.12);
+      }
+
+      .surprise.is-visible {
+        display: block;
+      }
+
+      .surprise h2 {
+        font-size: clamp(1.8rem, 5vw, 3.4rem);
+      }
+
+      .surprise p {
+        max-width: 720px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
       .heartline {
         display: grid;
         grid-template-columns: 1fr auto 1fr;
@@ -230,8 +326,13 @@
         }
 
         .timeline-head,
-        .dates {
+        .dates,
+        .actions {
           display: grid;
+        }
+
+        .pulse-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
     </style>
@@ -285,7 +386,40 @@
             <span>Dernière fois : 26 mai 2026</span>
             <span>Retour espéré : 15 août 2026</span>
           </div>
+          <div class="pulse-grid" aria-label="Décompte vivant">
+            <div class="pulse">
+              <strong id="liveDays">0</strong>
+              <span>jours</span>
+            </div>
+            <div class="pulse">
+              <strong id="liveHours">0</strong>
+              <span>heures</span>
+            </div>
+            <div class="pulse">
+              <strong id="liveMinutes">0</strong>
+              <span>minutes</span>
+            </div>
+            <div class="pulse">
+              <strong id="liveSeconds">0</strong>
+              <span>secondes</span>
+            </div>
+          </div>
           <p class="note" id="note"></p>
+        </article>
+
+        <article class="daily">
+          <span class="percent">Phrase du jour</span>
+          <p id="dailyPhrase">Chaque jour rapproche un peu plus le moment.</p>
+        </article>
+
+        <article class="actions">
+          <p>Tu peux lui envoyer le décompte directement. Telegram ouvrira le partage, puis tu choisis votre discussion.</p>
+          <a class="share-button" id="telegramShare" href="#" target="_blank" rel="noopener">Envoyer à Poupouille</a>
+        </article>
+
+        <article class="surprise" id="surprise">
+          <h2>Le jour est arrivé ♥</h2>
+          <p>Le calendrier a fini son travail. Aujourd’hui, ce n’est plus un décompte : c’est le moment de retrouver Poupouille.</p>
         </article>
 
         <div class="heartline">Poupouille se rapproche ♥</div>
@@ -295,38 +429,83 @@
     <script>
       const lastSeen = new Date(2026, 4, 26);
       const reunion = new Date(2026, 7, 15);
-      const today = new Date();
-      const current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const phrases = [
+        "Encore un matin de moins entre vous deux.",
+        "Le calendrier avance, même quand il fait semblant d’être lent.",
+        "Chaque case cochée rapproche Poupouille.",
+        "Aujourd’hui aussi, l’attente travaille pour vous.",
+        "Un jour de plus dans la poche, un jour de moins à tenir.",
+        "La distance ne gagne pas, elle perd une journée.",
+        "Le 15 août continue d’approcher sans faire de bruit.",
+        "Même les longues attentes finissent par arriver quelque part.",
+        "Le compteur descend, doucement mais sûrement.",
+        "Poupouille est un peu moins loin qu’hier.",
+        "La patience a parfois une forme de calendrier.",
+        "Chaque journée passée devient une preuve.",
+        "Le temps fait son malin, mais il avance dans le bon sens.",
+        "Encore un petit morceau du chemin avalé.",
+        "La date se rapproche, même quand la journée paraît longue.",
+        "Ce n’est pas juste attendre : c’est compter vers elle.",
+        "Un jour de moins avant de respirer pareil au même endroit.",
+        "La ligne d’arrivée existe, et elle a une date.",
+        "Le manque aussi sait compter à rebours.",
+        "Le 15 août a déjà commencé à venir vers toi."
+      ];
       const dayMs = 24 * 60 * 60 * 1000;
-
-      const totalDays = Math.max(1, Math.round((reunion - lastSeen) / dayMs));
-      const elapsedDays = Math.max(0, Math.round((current - lastSeen) / dayMs));
-      const remainingDays = Math.max(0, Math.round((reunion - current) / dayMs));
-      const progress = Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100));
-      const roundedProgress = Math.round(progress);
-
-      document.getElementById("elapsedDays").textContent = elapsedDays;
-      document.getElementById("remainingDays").textContent = remainingDays;
-      document.getElementById("progressNumber").textContent = `${roundedProgress}%`;
-      document.getElementById("progressText").textContent = `${roundedProgress}% parcouru`;
-      document.getElementById("progressFill").style.width = `${progress}%`;
 
       const headline = document.getElementById("headline");
       const message = document.getElementById("message");
       const note = document.getElementById("note");
+      const surprise = document.getElementById("surprise");
 
-      if (current < lastSeen) {
-        headline.textContent = "Le décompte commencera bientôt";
-        message.textContent = "La date de départ est fixée au 26 mai 2026.";
-        note.textContent = "Pour l’instant, le calendrier attend le début de l’histoire.";
-      } else if (current >= reunion) {
-        headline.textContent = "Le jour est arrivé";
-        message.textContent = "Le 15 août 2026 est là. Le décompte peut enfin devenir des retrouvailles avec Poupouille ♥.";
-        note.textContent = "Si la date change, il suffira de modifier la date de retour dans ce fichier.";
-      } else {
-        headline.textContent = `${remainingDays} jours avant Poupouille ♥`;
-        note.textContent = `Il s’est déjà écoulé ${elapsedDays} jours sur ${totalDays}. Il en reste ${remainingDays}.`;
+      function updateCountdown() {
+        const now = new Date();
+        const current = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const totalDays = Math.max(1, Math.round((reunion - lastSeen) / dayMs));
+        const elapsedDays = Math.max(0, Math.round((current - lastSeen) / dayMs));
+        const remainingDays = Math.max(0, Math.ceil((reunion - current) / dayMs));
+        const progress = Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100));
+        const roundedProgress = Math.round(progress);
+        const remainingMs = Math.max(0, reunion - now);
+        const liveDays = Math.floor(remainingMs / dayMs);
+        const liveHours = Math.floor((remainingMs % dayMs) / (60 * 60 * 1000));
+        const liveMinutes = Math.floor((remainingMs % (60 * 60 * 1000)) / (60 * 1000));
+        const liveSeconds = Math.floor((remainingMs % (60 * 1000)) / 1000);
+        const phraseIndex = Math.max(0, elapsedDays) % phrases.length;
+        const shareUrl = new URL("https://t.me/share/url");
+        shareUrl.searchParams.set("url", window.location.href);
+        shareUrl.searchParams.set("text", `${remainingDays} jours avant Poupouille ♥`);
+
+        document.getElementById("elapsedDays").textContent = elapsedDays;
+        document.getElementById("remainingDays").textContent = remainingDays;
+        document.getElementById("progressNumber").textContent = `${roundedProgress}%`;
+        document.getElementById("progressText").textContent = `${roundedProgress}% parcouru`;
+        document.getElementById("progressFill").style.width = `${progress}%`;
+        document.getElementById("liveDays").textContent = liveDays;
+        document.getElementById("liveHours").textContent = String(liveHours).padStart(2, "0");
+        document.getElementById("liveMinutes").textContent = String(liveMinutes).padStart(2, "0");
+        document.getElementById("liveSeconds").textContent = String(liveSeconds).padStart(2, "0");
+        document.getElementById("dailyPhrase").textContent = phrases[phraseIndex];
+        document.getElementById("telegramShare").href = shareUrl.toString();
+
+        if (current < lastSeen) {
+          headline.textContent = "Le décompte commencera bientôt";
+          message.textContent = "La date de départ est fixée au 26 mai 2026.";
+          note.textContent = "Pour l’instant, le calendrier attend le début de l’histoire.";
+        } else if (current >= reunion) {
+          headline.textContent = "Le jour est arrivé";
+          message.textContent = "Le 15 août 2026 est là. Le décompte peut enfin devenir des retrouvailles avec Poupouille ♥.";
+          note.textContent = "Le décompte a fini sa mission.";
+          surprise.classList.add("is-visible");
+        } else {
+          headline.textContent = `${remainingDays} jours avant Poupouille ♥`;
+          note.textContent = `Il s’est déjà écoulé ${elapsedDays} jours sur ${totalDays}. Il en reste ${remainingDays}.`;
+          surprise.classList.remove("is-visible");
+        }
       }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
     </script>
   </body>
 </html>
