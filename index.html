@@ -17,8 +17,10 @@
         --text: #f4efe6;
         --muted: #c8c0b5;
         --soft: #ead7bd;
-        --accent: #f19c76;
-        --accent-2: #86c5b0;
+        --accent: #f07ab8;
+        --accent-2: #6fb7ff;
+        --blue: #6fb7ff;
+        --pink: #f07ab8;
         --line: rgba(244, 239, 230, 0.17);
         --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
       }
@@ -107,7 +109,8 @@
       .tile,
       .timeline,
       .daily,
-      .actions {
+      .actions,
+      .balance {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
@@ -226,7 +229,8 @@
       }
 
       .daily,
-      .actions {
+      .actions,
+      .balance {
         padding: 24px;
       }
 
@@ -248,6 +252,55 @@
         margin: 0;
         color: var(--muted);
         line-height: 1.45;
+      }
+
+      .balance-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .balance-side {
+        min-height: 132px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(246, 240, 226, 0.06);
+      }
+
+      .balance-side strong {
+        display: block;
+        margin-top: 10px;
+        font-size: clamp(2.4rem, 7vw, 4.8rem);
+        line-height: 0.95;
+      }
+
+      .balance-side span {
+        color: var(--muted);
+      }
+
+      .balance-bar {
+        height: 12px;
+        margin-top: 16px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(244, 239, 230, 0.1);
+      }
+
+      .balance-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        transition: width 700ms ease;
+      }
+
+      .balance-fill.elapsed {
+        background: linear-gradient(90deg, #8ed0ff, var(--blue));
+      }
+
+      .balance-fill.remaining {
+        background: linear-gradient(90deg, #ffb6dc, var(--pink));
       }
 
       .share-button {
@@ -331,6 +384,10 @@
           display: grid;
         }
 
+        .balance-grid {
+          grid-template-columns: 1fr;
+        }
+
         .pulse-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -412,8 +469,28 @@
           <p id="dailyPhrase">Chaque jour rapproche un peu plus le moment.</p>
         </article>
 
+        <article class="balance">
+          <span class="percent">La balance du temps</span>
+          <div class="balance-grid">
+            <div class="balance-side">
+              <span>Déjà traversé</span>
+              <strong id="elapsedVisual">0</strong>
+              <div class="balance-bar" aria-hidden="true">
+                <div class="balance-fill elapsed" id="elapsedFill"></div>
+              </div>
+            </div>
+            <div class="balance-side">
+              <span>Encore à tenir</span>
+              <strong id="remainingVisual">0</strong>
+              <div class="balance-bar" aria-hidden="true">
+                <div class="balance-fill remaining" id="remainingFill"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
         <article class="actions">
-          <p>Tu peux lui envoyer le décompte directement. Telegram ouvrira le partage, puis tu choisis votre discussion.</p>
+          <p>Le bouton prépare le message dans Telegram. Par sécurité, Telegram te laisse choisir et valider la discussion avant l’envoi.</p>
           <a class="share-button" id="telegramShare" href="#" target="_blank" rel="noopener">Envoyer à Poupouille</a>
         </article>
 
@@ -430,26 +507,26 @@
       const lastSeen = new Date(2026, 4, 26);
       const reunion = new Date(2026, 7, 15);
       const phrases = [
-        "Encore un matin de moins entre vous deux.",
-        "Le calendrier avance, même quand il fait semblant d’être lent.",
-        "Chaque case cochée rapproche Poupouille.",
-        "Aujourd’hui aussi, l’attente travaille pour vous.",
-        "Un jour de plus dans la poche, un jour de moins à tenir.",
-        "La distance ne gagne pas, elle perd une journée.",
-        "Le 15 août continue d’approcher sans faire de bruit.",
-        "Même les longues attentes finissent par arriver quelque part.",
-        "Le compteur descend, doucement mais sûrement.",
-        "Poupouille est un peu moins loin qu’hier.",
-        "La patience a parfois une forme de calendrier.",
-        "Chaque journée passée devient une preuve.",
-        "Le temps fait son malin, mais il avance dans le bon sens.",
-        "Encore un petit morceau du chemin avalé.",
-        "La date se rapproche, même quand la journée paraît longue.",
-        "Ce n’est pas juste attendre : c’est compter vers elle.",
-        "Un jour de moins avant de respirer pareil au même endroit.",
-        "La ligne d’arrivée existe, et elle a une date.",
-        "Le manque aussi sait compter à rebours.",
-        "Le 15 août a déjà commencé à venir vers toi."
+        "L’amour ne compte pas les kilomètres, il compte les retours.",
+        "Qui aime attend, mais n’attend jamais pour rien.",
+        "Loin des yeux, près du cœur.",
+        "Le vrai amour transforme l’attente en promesse.",
+        "Deux cœurs patients finissent toujours par battre au même endroit.",
+        "L’amour grandit dans les petits signes.",
+        "Le manque est parfois la preuve que la place est juste.",
+        "Quand le cœur sait où aller, le temps finit par suivre.",
+        "Aimer, c’est garder une lumière allumée.",
+        "La distance mesure l’espace, pas l’amour.",
+        "Un amour sincère sait traverser les saisons.",
+        "Le cœur reconnaît ce que le calendrier prépare.",
+        "Les retrouvailles sont la récompense des jours longs.",
+        "Aimer, c’est faire confiance au chemin.",
+        "Le temps passe, l’attachement reste.",
+        "L’amour rend les jours ordinaires plus courageux.",
+        "Chaque attente porte déjà un peu de la joie qui arrive.",
+        "Ce qui compte vraiment finit toujours par revenir au centre.",
+        "L’absence n’efface pas, elle révèle.",
+        "Deux personnes qui s’aiment habitent déjà un même horizon."
       ];
       const dayMs = 24 * 60 * 60 * 1000;
 
@@ -487,6 +564,10 @@
         document.getElementById("liveSeconds").textContent = String(liveSeconds).padStart(2, "0");
         document.getElementById("dailyPhrase").textContent = phrases[phraseIndex];
         document.getElementById("telegramShare").href = shareUrl.toString();
+        document.getElementById("elapsedVisual").textContent = elapsedDays;
+        document.getElementById("remainingVisual").textContent = remainingDays;
+        document.getElementById("elapsedFill").style.width = `${progress}%`;
+        document.getElementById("remainingFill").style.width = `${100 - progress}%`;
 
         if (current < lastSeen) {
           headline.textContent = "Le décompte commencera bientôt";
