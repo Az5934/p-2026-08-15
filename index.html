@@ -110,7 +110,9 @@
       .timeline,
       .daily,
       .actions,
-      .balance {
+      .balance,
+      .calendar-card,
+      .badges {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
@@ -230,7 +232,9 @@
 
       .daily,
       .actions,
-      .balance {
+      .balance,
+      .calendar-card,
+      .badges {
         padding: 24px;
       }
 
@@ -318,6 +322,91 @@
         text-decoration: none;
       }
 
+      .copy-button {
+        flex: 0 0 auto;
+        min-height: 46px;
+        padding: 0 18px;
+        border: 1px solid rgba(244, 239, 230, 0.24);
+        border-radius: 8px;
+        color: var(--text);
+        background: rgba(246, 240, 226, 0.08);
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .actions-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(9, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .day-dot {
+        aspect-ratio: 1;
+        border-radius: 999px;
+        border: 1px solid rgba(244, 239, 230, 0.18);
+        background: rgba(246, 240, 226, 0.07);
+      }
+
+      .day-dot.done {
+        background: linear-gradient(145deg, #8ed0ff, var(--blue));
+        box-shadow: 0 0 16px rgba(111, 183, 255, 0.26);
+      }
+
+      .day-dot.today {
+        outline: 2px solid var(--pink);
+        outline-offset: 2px;
+      }
+
+      .calendar-caption {
+        margin: 14px 0 0;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .badge-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .badge {
+        min-height: 94px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(246, 240, 226, 0.06);
+      }
+
+      .badge.is-done {
+        border-color: rgba(111, 183, 255, 0.55);
+        background: rgba(111, 183, 255, 0.13);
+      }
+
+      .badge.is-current {
+        border-color: rgba(240, 122, 184, 0.65);
+        background: rgba(240, 122, 184, 0.14);
+      }
+
+      .badge strong,
+      .badge span {
+        display: block;
+      }
+
+      .badge span {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
       .surprise {
         display: none;
         padding: 28px;
@@ -384,12 +473,23 @@
           display: grid;
         }
 
+        .actions-buttons,
+        .badge-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
         .balance-grid {
           grid-template-columns: 1fr;
         }
 
         .pulse-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .calendar-grid {
+          grid-template-columns: repeat(9, minmax(0, 1fr));
+          gap: 6px;
         }
       }
     </style>
@@ -489,9 +589,23 @@
           </div>
         </article>
 
+        <article class="calendar-card">
+          <span class="percent">Mini calendrier</span>
+          <div class="calendar-grid" id="calendarGrid" aria-label="81 jours entre le 26 mai et le 15 août"></div>
+          <p class="calendar-caption" id="calendarCaption">Chaque point représente un jour.</p>
+        </article>
+
+        <article class="badges">
+          <span class="percent">Étapes</span>
+          <div class="badge-grid" id="badgeGrid"></div>
+        </article>
+
         <article class="actions">
           <p>Le bouton prépare le message dans Telegram. Par sécurité, Telegram te laisse choisir et valider la discussion avant l’envoi.</p>
-          <a class="share-button" id="telegramShare" href="#" target="_blank" rel="noopener">Envoyer à Poupouille</a>
+          <div class="actions-buttons">
+            <a class="share-button" id="telegramShare" href="#" target="_blank" rel="noopener">Envoyer à Poupouille</a>
+            <button class="copy-button" id="copyLink" type="button">Copier le lien</button>
+          </div>
         </article>
 
         <article class="surprise" id="surprise">
@@ -534,6 +648,37 @@
       const message = document.getElementById("message");
       const note = document.getElementById("note");
       const surprise = document.getElementById("surprise");
+      const calendarGrid = document.getElementById("calendarGrid");
+      const badgeGrid = document.getElementById("badgeGrid");
+      const copyLink = document.getElementById("copyLink");
+
+      function renderCalendar(totalDays) {
+        calendarGrid.innerHTML = "";
+        for (let day = 1; day <= totalDays; day += 1) {
+          const dot = document.createElement("span");
+          dot.className = "day-dot";
+          dot.dataset.day = String(day);
+          dot.title = `Jour ${day}`;
+          calendarGrid.appendChild(dot);
+        }
+      }
+
+      function renderBadges(totalDays) {
+        const steps = [
+          { key: "25", label: "25%", day: Math.ceil(totalDays * 0.25) },
+          { key: "50", label: "50%", day: Math.ceil(totalDays * 0.5) },
+          { key: "75", label: "75%", day: Math.ceil(totalDays * 0.75) },
+          { key: "last", label: "Dernière semaine", day: Math.max(1, totalDays - 7) }
+        ];
+        badgeGrid.innerHTML = "";
+        for (const step of steps) {
+          const item = document.createElement("div");
+          item.className = "badge";
+          item.dataset.day = String(step.day);
+          item.innerHTML = `<strong>${step.label}</strong><span>à partir du jour ${step.day}</span>`;
+          badgeGrid.appendChild(item);
+        }
+      }
 
       function updateCountdown() {
         const now = new Date();
@@ -551,7 +696,7 @@
         const phraseIndex = Math.max(0, elapsedDays) % phrases.length;
         const shareUrl = new URL("https://t.me/share/url");
         shareUrl.searchParams.set("url", window.location.href);
-        shareUrl.searchParams.set("text", `${remainingDays} jours avant Poupouille ♥`);
+        shareUrl.searchParams.set("text", `J-${remainingDays} avant Poupouille ♥`);
 
         document.getElementById("elapsedDays").textContent = elapsedDays;
         document.getElementById("remainingDays").textContent = remainingDays;
@@ -568,6 +713,19 @@
         document.getElementById("remainingVisual").textContent = remainingDays;
         document.getElementById("elapsedFill").style.width = `${progress}%`;
         document.getElementById("remainingFill").style.width = `${100 - progress}%`;
+        document.getElementById("calendarCaption").textContent = `Jour ${elapsedDays} sur ${totalDays}. ${remainingDays} jours avant les retrouvailles.`;
+
+        for (const dot of calendarGrid.children) {
+          const day = Number(dot.dataset.day);
+          dot.classList.toggle("done", day <= elapsedDays);
+          dot.classList.toggle("today", day === Math.min(totalDays, elapsedDays + 1));
+        }
+
+        for (const badge of badgeGrid.children) {
+          const day = Number(badge.dataset.day);
+          badge.classList.toggle("is-done", elapsedDays >= day);
+          badge.classList.toggle("is-current", elapsedDays < day && elapsedDays >= day - 5);
+        }
 
         if (current < lastSeen) {
           headline.textContent = "Le décompte commencera bientôt";
@@ -585,8 +743,23 @@
         }
       }
 
+      const totalDaysInitial = Math.max(1, Math.round((reunion - lastSeen) / dayMs));
+      renderCalendar(totalDaysInitial);
+      renderBadges(totalDaysInitial);
       updateCountdown();
       setInterval(updateCountdown, 1000);
+
+      copyLink.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          copyLink.textContent = "Lien copié";
+          window.setTimeout(() => {
+            copyLink.textContent = "Copier le lien";
+          }, 1800);
+        } catch {
+          copyLink.textContent = "Copie impossible";
+        }
+      });
     </script>
   </body>
 </html>
