@@ -397,6 +397,7 @@
         transition:
           opacity 180ms ease,
           transform 180ms ease;
+        display: none;
       }
 
       .snore-toggle.is-muted img {
@@ -729,7 +730,7 @@
     </main>
 
     <button class="snore-toggle is-muted" id="snoreToggle" type="button" aria-label="Play Brownie snoring">
-      <img src="https://files.catbox.moe/02qo9i.png" alt="" aria-hidden="true" />
+      <img src="https://files.catbox.moe/qxtjhl.jpg" alt="" aria-hidden="true" />
     </button>
 
     <script>
@@ -881,6 +882,9 @@
       snoreAudio.loop = true;
       snoreAudio.preload = "auto";
       snoreAudio.src = "https://files.catbox.moe/ja975c.m4a";
+      const snoreMutedImage = "https://files.catbox.moe/qxtjhl.jpg";
+      const snorePlayingImage = "https://files.catbox.moe/02qo9i.png";
+      const snoreImage = snoreToggle.querySelector("img");
       let hideSnoreTimer;
 
       function scheduleSnoreHide() {
@@ -899,6 +903,7 @@
         try {
           cancelSnoreHide();
           await snoreAudio.play();
+          snoreImage.src = snorePlayingImage;
           snoreToggle.classList.remove("is-muted");
           snoreToggle.classList.add("is-playing", "uses-fallback");
           snoreToggle.setAttribute("aria-label", "Mute Brownie snoring");
@@ -910,6 +915,7 @@
 
       function pauseSnore() {
         snoreAudio.pause();
+        snoreImage.src = snoreMutedImage;
         snoreToggle.style.setProperty("--snore-scale", "1");
         snoreToggle.classList.remove("is-playing");
         snoreToggle.classList.add("is-muted");
