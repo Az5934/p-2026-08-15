@@ -365,7 +365,7 @@
         object-fit: contain;
         transform: scale(var(--snore-scale)) rotate(-5deg);
         transform-origin: 58% 54%;
-        filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.42));
+        filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.22));
         opacity: 1;
         transition:
           opacity 260ms ease,
@@ -730,7 +730,7 @@
     </main>
 
     <button class="snore-toggle is-muted" id="snoreToggle" type="button" aria-label="Play Brownie snoring">
-      <img src="https://files.catbox.moe/7kl7af.png" alt="" aria-hidden="true" />
+      <img src="https://files.catbox.moe/vti7pt.png" alt="" aria-hidden="true" />
     </button>
 
     <script>
@@ -882,7 +882,7 @@
       snoreAudio.loop = true;
       snoreAudio.preload = "auto";
       snoreAudio.src = "https://files.catbox.moe/ja975c.m4a";
-      const snoreMutedImage = "https://files.catbox.moe/7kl7af.png";
+      const snoreMutedImage = "https://files.catbox.moe/vti7pt.png";
       const snorePlayingImage = "https://files.catbox.moe/02qo9i.png";
       const snoreImage = snoreToggle.querySelector("img");
       let hideSnoreTimer;
