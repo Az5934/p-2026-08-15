@@ -634,56 +634,13 @@ copyLink.textContent = "Could not copy";
 const snoreAudio = new Audio();
 snoreAudio.loop = true;
 snoreAudio.preload = "auto";
-snoreAudio.crossOrigin = "anonymous";
 snoreAudio.src = "https://files.catbox.moe/ja975c.m4a";
-let snoreContext;
-let snoreAnalyser;
-let snoreData;
-let snoreFrame;
-function setupSnoreAnalyser() {
-if (snoreAnalyser) return;
-const AudioContext = window.AudioContext || window.webkitAudioContext;
-if (!AudioContext) return;
-snoreContext = new AudioContext();
-const source = snoreContext.createMediaElementSource(snoreAudio);
-snoreAnalyser = snoreContext.createAnalyser();
-snoreAnalyser.fftSize = 256;
-snoreData = new Uint8Array(snoreAnalyser.frequencyBinCount);
-source.connect(snoreAnalyser);
-snoreAnalyser.connect(snoreContext.destination);
-}
-function animateSnore() {
-if (!snoreAnalyser || snoreAudio.paused) return;
-snoreAnalyser.getByteTimeDomainData(snoreData);
-let sum = 0;
-for (const value of snoreData) {
-const centered = value - 128;
-sum += centered * centered;
-}
-const volume = Math.sqrt(sum / snoreData.length);
-const scale = 1 + Math.min(0.16, volume / 84);
-snoreToggle.style.setProperty("--snore-scale", scale.toFixed(3));
-snoreFrame = requestAnimationFrame(animateSnore);
-}
 async function playSnore() {
 try {
-try {
-setupSnoreAnalyser();
-} catch {
-snoreToggle.classList.add("uses-fallback");
-}
-if (!snoreAnalyser) {
-snoreToggle.classList.add("uses-fallback");
-}
-if (snoreContext?.state === "suspended") {
-await snoreContext.resume();
-}
 await snoreAudio.play();
 snoreToggle.classList.remove("is-muted");
-snoreToggle.classList.add("is-playing");
+snoreToggle.classList.add("is-playing", "uses-fallback");
 snoreToggle.setAttribute("aria-label", "Mute Brownie snoring");
-cancelAnimationFrame(snoreFrame);
-animateSnore();
 } catch {
 snoreToggle.classList.remove("is-playing");
 snoreToggle.classList.add("is-muted");
@@ -691,7 +648,6 @@ snoreToggle.classList.add("is-muted");
 }
 function pauseSnore() {
 snoreAudio.pause();
-cancelAnimationFrame(snoreFrame);
 snoreToggle.style.setProperty("--snore-scale", "1");
 snoreToggle.classList.remove("is-playing");
 snoreToggle.classList.add("is-muted");
