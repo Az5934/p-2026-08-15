@@ -294,16 +294,20 @@ pointer-events: none;
 .snore-toggle {
 --snore-scale: 1;
 position: fixed;
-right: clamp(14px, 3vw, 28px);
-bottom: clamp(76px, 9vh, 112px);
+right: clamp(18px, 5vw, 44px);
+top: clamp(132px, 18vh, 180px);
 z-index: 30;
-width: 116px;
-height: 104px;
+width: 138px;
+height: 120px;
 padding: 0;
 border: 0;
 background: transparent;
 cursor: pointer;
-transform: translateZ(0);
+opacity: 1;
+transform: translateZ(0) scale(1);
+transition:
+opacity 5s ease,
+transform 5s ease;
 }
 .snore-toggle img {
 width: 100%;
@@ -312,27 +316,47 @@ object-fit: contain;
 transform: scale(var(--snore-scale)) rotate(-5deg);
 transform-origin: 58% 54%;
 filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.42));
-transition: transform 180ms ease-out;
+opacity: 1;
+transition:
+opacity 260ms ease,
+transform 180ms ease-out;
 }
 .snore-toggle.is-playing.uses-fallback img {
 animation: snoreFallback 1700ms ease-in-out infinite;
 }
-.snore-toggle::after {
-content: "";
+.snore-toggle::before {
+content: "✕";
 position: absolute;
-left: 16px;
-right: 8px;
-top: 50%;
-height: 7px;
+right: 3px;
+top: 5px;
+width: 48px;
+height: 48px;
 border-radius: 999px;
-background: #ef293d;
-box-shadow: 0 2px 0 rgba(0, 0, 0, 0.28);
-transform: translateY(-50%) rotate(-28deg) scaleX(0);
-transform-origin: center;
-transition: transform 180ms ease;
+display: grid;
+place-items: center;
+color: #fff;
+background: #ef101f;
+font-size: 2rem;
+font-weight: 900;
+line-height: 1;
+box-shadow: 0 10px 22px rgba(0, 0, 0, 0.36);
+opacity: 0;
+transform: scale(0.55);
+transition:
+opacity 180ms ease,
+transform 180ms ease;
 }
-.snore-toggle.is-muted::after {
-transform: translateY(-50%) rotate(-28deg) scaleX(1);
+.snore-toggle.is-muted img {
+opacity: 0.18;
+}
+.snore-toggle.is-muted::before {
+opacity: 1;
+transform: scale(1);
+}
+.snore-toggle.is-hidden {
+opacity: 0;
+pointer-events: none;
+transform: translateZ(0) scale(0);
 }
 @keyframes snoreFallback {
 0%,
@@ -635,8 +659,21 @@ const snoreAudio = new Audio();
 snoreAudio.loop = true;
 snoreAudio.preload = "auto";
 snoreAudio.src = "https://files.catbox.moe/ja975c.m4a";
+let hideSnoreTimer;
+function scheduleSnoreHide() {
+window.clearTimeout(hideSnoreTimer);
+hideSnoreTimer = window.setTimeout(() => {
+snoreToggle.classList.add("is-hidden");
+}, 5000);
+}
+function cancelSnoreHide() {
+window.clearTimeout(hideSnoreTimer);
+snoreToggle.classList.remove("is-hidden");
+}
+scheduleSnoreHide();
 async function playSnore() {
 try {
+cancelSnoreHide();
 await snoreAudio.play();
 snoreToggle.classList.remove("is-muted");
 snoreToggle.classList.add("is-playing", "uses-fallback");
@@ -652,6 +689,7 @@ snoreToggle.style.setProperty("--snore-scale", "1");
 snoreToggle.classList.remove("is-playing");
 snoreToggle.classList.add("is-muted");
 snoreToggle.setAttribute("aria-label", "Play Brownie snoring");
+scheduleSnoreHide();
 }
 snoreToggle.addEventListener("click", () => {
 if (snoreAudio.paused) {
